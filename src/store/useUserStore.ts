@@ -79,59 +79,39 @@ export const useUserStore = create<UserStore>((set, get) => ({
   },
 
   _loadUser: async (session) => {
+    let profile = null;
+    let userProfile = null;
+
     try {
-      const { data: profile, error: profileError } = await supabase
+      const { data } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', session.user.id)
         .maybeSingle();
-
-      if (profileError) {
-        console.error('Error fetching profile:', profileError);
-      }
-
-      // If profile exists but role is not 'user', sign out
-      if (profile && profile.role !== 'user') {
-        await supabase.auth.signOut();
-        return;
-      }
-
-      let userProfile = null;
-      try {
-        const { data, error: userProfileError } = await supabase
-          .from('user_profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .maybeSingle();
-
-        if (userProfileError) {
-          console.error('Error fetching user_profile:', userProfileError);
-        }
-        userProfile = data;
-      } catch (e) {
-        console.error('Error fetching user_profile:', e);
-      }
-
-      set({
-        user: session.user,
-        profile: profile ?? null,
-        userProfile,
-        session,
-        isAuthenticated: true,
-        email: session.user.email || '',
-      });
+      profile = data;
     } catch (e) {
-      console.error('Error in _loadUser:', e);
-      // Still mark as authenticated since the session is valid
-      set({
-        user: session.user,
-        profile: null,
-        userProfile: null,
-        session,
-        isAuthenticated: true,
-        email: session.user.email || '',
-      });
+      console.error('Error fetching profile:', e);
     }
+
+    try {
+      const { data } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', session.user.id)
+        .maybeSingle();
+      userProfile = data;
+    } catch (e) {
+      console.error('Error fetching user_profile:', e);
+    }
+
+    set({
+      user: session.user,
+      profile,
+      userProfile,
+      session,
+      isAuthenticated: true,
+      email: session.user.email || '',
+    });
   },
 
   signIn: async (email, password) => {
