@@ -32,8 +32,8 @@ interface UserStore {
 
   // Auth methods
   initialize: () => Promise<void>;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, fullName: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  signUp: (email: string, password: string, fullName: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   _loadUser: (session: any) => Promise<void>;
@@ -65,8 +65,9 @@ export const useUserStore = create<UserStore>((set, get) => ({
       }
     } catch (e) {
       console.error('Auth init error:', e);
+    } finally {
+      set({ isLoading: false });
     }
-    set({ isLoading: false });
 
     supabase.auth.onAuthStateChange(async (_, session) => {
       if (session?.user) {
@@ -78,45 +79,83 @@ export const useUserStore = create<UserStore>((set, get) => ({
   },
 
   _loadUser: async (session) => {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', session.user.id)
-      .single();
+    try {
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', session.user.id)
+        .maybeSingle();
 
-    if (profile?.role !== 'user') {
-      await supabase.auth.signOut();
-      return;
+      if (profileError) {
+        console.error('Error fetching profile:', profileError);
+      }
+
+      // If profile exists but role is not 'user', sign out
+      if (profile && profile.role !== 'user') {
+        await supabase.auth.signOut();
+        return;
+      }
+
+      let userProfile = null;
+      try {
+        const { data, error: userProfileError } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .maybeSingle();
+
+        if (userProfileError) {
+          console.error('Error fetching user_profile:', userProfileError);
+        }
+        userProfile = data;
+      } catch (e) {
+        console.error('Error fetching user_profile:', e);
+      }
+
+      set({
+        user: session.user,
+        profile: profile ?? null,
+        userProfile,
+        session,
+        isAuthenticated: true,
+        email: session.user.email || '',
+      });
+    } catch (e) {
+      console.error('Error in _loadUser:', e);
+      // Still mark as authenticated since the session is valid
+      set({
+        user: session.user,
+        profile: null,
+        userProfile: null,
+        session,
+        isAuthenticated: true,
+        email: session.user.email || '',
+      });
     }
-
-    const { data: userProfile } = await supabase
-      .from('user_profiles')
-      .select('*')
-      .eq('id', session.user.id)
-      .single();
-
-    set({
-      user: session.user,
-      profile,
-      userProfile,
-      session,
-      isAuthenticated: true,
-      email: session.user.email || '',
-    });
   },
 
   signIn: async (email, password) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) return { error: error.message };
+      return { error: null };
+    } catch (e: any) {
+      return { error: e.message || 'Sign in failed' };
+    }
   },
 
   signUp: async (email, password, fullName) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { full_name: fullName, role: 'user' } },
-    });
-    if (error) throw error;
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { full_name: fullName, role: 'user' } },
+      });
+      if (error) return { error: error.message };
+      return { error: null };
+    } catch (e: any) {
+      return { error: e.message || 'Sign up failed' };
+    }
   },
 
   signOut: async () => {

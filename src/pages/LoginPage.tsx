@@ -74,9 +74,15 @@ export default function LoginPage() {
     try {
       if (isSignUp) {
         if (!fullName.trim()) { setError('Please enter your name'); setLoading(false); return; }
-        await signUp(email, password, fullName);
+        const result = await signUp(email, password, fullName);
+        if (result.error) {
+          setError(result.error);
+        }
       } else {
-        await signIn(email, password);
+        const result = await signIn(email, password);
+        if (result.error) {
+          setError(result.error);
+        }
       }
     } catch (e: any) {
       setError(e.message || 'Authentication failed');
@@ -85,14 +91,23 @@ export default function LoginPage() {
     }
   }, [email, password, isSignUp, fullName, signIn, signUp]);
 
-  const handleSocialLogin = useCallback(() => {
-    // Google OAuth via Supabase
-    import('../lib/supabase').then(({ supabase }) => {
-      supabase.auth.signInWithOAuth({
+  const handleSocialLogin = useCallback(async () => {
+    try {
+      const { supabase } = await import('../lib/supabase');
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: { redirectTo: window.location.origin + '/questionnaire' },
       });
-    });
+      if (error) {
+        setError(error.message);
+      }
+    } catch (e: any) {
+      setError(e.message || 'Google login failed');
+    }
+  }, []);
+
+  const handleComingSoon = useCallback(() => {
+    setError('This login method is coming soon. Please use Google or email/password.');
   }, []);
 
   const left = (
@@ -118,25 +133,28 @@ export default function LoginPage() {
             Google
           </button>
           <button
-            onClick={handleSocialLogin}
-            className="flex items-center justify-center gap-2 rounded-[12px] border border-light-border bg-white px-4 py-3 font-body text-sm font-medium text-light-text transition-colors hover:bg-light-base"
+            onClick={handleComingSoon}
+            className="flex items-center justify-center gap-2 rounded-[12px] border border-light-border bg-white px-4 py-3 font-body text-sm font-medium text-light-muted transition-colors hover:bg-light-base opacity-60 cursor-default"
           >
             <svg width="16" height="18" viewBox="0 0 16 18" fill="currentColor"><path d="M13.34 9.48c-.02-2.08 1.7-3.08 1.78-3.13-1-1.42-2.5-1.62-3.04-1.64-1.28-.13-2.52.76-3.18.76-.66 0-1.66-.74-2.74-.72A4.05 4.05 0 002.72 7.2c-1.46 2.52-.37 6.24 1.04 8.28.7 1 1.52 2.12 2.6 2.08 1.06-.04 1.46-.68 2.72-.68 1.28 0 1.64.68 2.74.66 1.12-.02 1.84-1 2.52-2.02.8-1.16 1.12-2.28 1.14-2.34-.02-.02-2.14-.82-2.14-3.26v-.44zm-2-5.98c.56-.7.94-1.66.84-2.62-.82.04-1.82.56-2.4 1.24-.52.6-.98 1.58-.86 2.5.92.08 1.86-.46 2.42-1.12z"/></svg>
             Apple
+            <span className="text-[10px] text-light-muted">(soon)</span>
           </button>
           <button
-            onClick={handleSocialLogin}
-            className="flex items-center justify-center gap-2 rounded-[12px] border border-light-border bg-white px-4 py-3 font-body text-sm font-medium text-light-text transition-colors hover:bg-light-base"
+            onClick={handleComingSoon}
+            className="flex items-center justify-center gap-2 rounded-[12px] border border-light-border bg-white px-4 py-3 font-body text-sm font-medium text-light-muted transition-colors hover:bg-light-base opacity-60 cursor-default"
           >
             <svg width="18" height="18" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
             Microsoft
+            <span className="text-[10px] text-light-muted">(soon)</span>
           </button>
           <button
-            onClick={handleSocialLogin}
-            className="flex items-center justify-center gap-2 rounded-[12px] border border-light-border bg-white px-4 py-3 font-body text-sm font-medium text-light-text transition-colors hover:bg-light-base"
+            onClick={handleComingSoon}
+            className="flex items-center justify-center gap-2 rounded-[12px] border border-light-border bg-white px-4 py-3 font-body text-sm font-medium text-light-muted transition-colors hover:bg-light-base opacity-60 cursor-default"
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="1" y="1" width="5" height="5" rx="1"/><rect x="10" y="1" width="5" height="5" rx="1"/><rect x="1" y="10" width="5" height="5" rx="1"/><rect x="10" y="10" width="5" height="5" rx="1"/></svg>
             SSO
+            <span className="text-[10px] text-light-muted">(soon)</span>
           </button>
         </div>
 
