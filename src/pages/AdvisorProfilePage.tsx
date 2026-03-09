@@ -295,7 +295,7 @@ export default function AdvisorProfilePage() {
                       onClick={() => setSelectedDate(d)}
                       className={cn(
                         'rounded-[8px] border px-3 py-1.5 font-body text-xs transition-colors',
-                        selectedDate?.toDateString() === d.toDateString()
+                        (selectedDate as Date | null)?.toDateString() === d.toDateString()
                           ? 'border-teal text-teal' : 'border-dark-border text-dark-muted hover:text-white'
                       )}
                     >

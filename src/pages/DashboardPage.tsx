@@ -212,7 +212,7 @@ export default function DashboardPage() {
                   <div>
                     <p className="font-body text-base font-medium text-white">{getAdvisorName(advisor)}</p>
                     <p className="font-mono text-xs text-dark-muted">
-                      {advisor.qualifications || advisor.credentials || ''} &middot; {advisor.sebi_registration_number || advisor.sebiNumber || ''}
+                      {(advisor as any).qualifications || (advisor as any).credentials || ''} &middot; {(advisor as any).sebi_registration_number || (advisor as any).sebiNumber || ''}
                     </p>
                   </div>
                 </div>

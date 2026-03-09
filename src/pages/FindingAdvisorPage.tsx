@@ -84,15 +84,18 @@ export default function FindingAdvisorPage() {
                   credentials: advisor.qualifications?.[0] || 'CFP',
                   sebiNumber: advisor.sebi_registration_number || '',
                   bio: advisor.bio || '',
-                  specialisations: advisor.specialisations || [],
+                  specializations: advisor.specialisations || [],
+                  lifeStages: [],
+                  workingStyle: [],
+                  incomeRange: [],
+                  tags: [],
+                  avatarInitials: (advisor.profiles?.full_name || 'A').split(' ').map((n: string) => n[0]).join('').slice(0, 2),
+                  avatarColor: 'bg-teal',
                   yearsExperience: advisor.years_experience,
                   city: advisor.profiles?.city || '',
                   rating: advisor.rating,
-                  reviewCount: advisor.review_count,
                   responseTimeHours: advisor.response_time_hours,
                   languages: advisor.languages || [],
-                  avatarBg: 'bg-teal',
-                  avatarInitials: (advisor.profiles?.full_name || 'A').split(' ').map((n: string) => n[0]).join('').slice(0, 2),
                 },
                 matchScore: topMatch.score,
                 matchReasons: [
@@ -100,6 +103,7 @@ export default function FindingAdvisorPage() {
                   `${advisor.years_experience}+ years experience`,
                   `${advisor.rating} rating from ${advisor.review_count} clients`,
                 ],
+                allMatches: [],
               });
             }
           }

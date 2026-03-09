@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { AlertTriangle, Check, Clock, MessageSquare, Calendar } from 'lucide-react';
+import { MessageSquare, Calendar } from 'lucide-react';
 import { DashboardShell } from '../components/layout/DashboardShell';
 import { Button } from '../components/ui/Button';
 import { Tabs } from '../components/ui/Tabs';
